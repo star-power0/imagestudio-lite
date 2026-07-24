@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ImageStudio Lite
 
-## Getting Started
+一个轻量、自带 API Key 的 AI 图片生成工具。基于 Next.js，兼容 OpenAI 图片生成协议（`/images/generations`、`/images/edits`），可直接对接官方 API 或任意兼容中转站。
 
-First, run the development server:
+## 功能
+
+- **文生图 / 图生图**：上传参考图即自动切换到编辑模式
+- **并行生成**：最多同时开 3 个独立卡片，各自设置不同提示词、分辨率、画幅、质量、格式，并行发起请求
+- **多套连接配置**：可保存多个 API Key / Base URL / 模型组合，随时切换
+- **本地历史画廊**：最近 20 张生成结果自动保存在浏览器本地（IndexedDB），支持查看参数、单张下载、删除
+- **隐私优先**：API Key 只保存在你自己的浏览器里，图片和历史记录也只存在本地，不经过任何第三方服务器落盘
+
+## 快速开始（本地开发）
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000)，在页面右上角「连接设置」里填入你的 API Base URL 和 API Key 即可使用。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 一键部署到 Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+本项目的两个接口（`/api/generate`、`/api/models`）是标准的 Next.js Serverless Function，Vercel 原生支持，**部署不需要配置任何环境变量**——API Key 由使用者在页面里自行填写。
 
-## Learn More
+1. Fork 本仓库到你自己的 GitHub 账号下（或直接使用本仓库）
+2. 点击下面的按钮，选择仓库完成部署：
 
-To learn more about Next.js, take a look at the following resources:
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/star-power0/imagestudio-lite)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. 部署完成后，Vercel 会给你一个形如 `https://your-project.vercel.app` 的公开地址，任何人（包括你自己）打开即可使用，无需再启动本地开发服务器。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 技术栈
 
-## Deploy on Vercel
+- [Next.js](https://nextjs.org) 16 (App Router)
+- [Tailwind CSS](https://tailwindcss.com) 4
+- 浏览器 IndexedDB（历史记录本地存储）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](./LICENSE)
