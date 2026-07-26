@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import ConnectionSettingsModal from './components/ConnectionSettingsModal';
 import GenerationCard, { GenerationCardHandle } from './components/GenerationCard';
@@ -209,9 +210,14 @@ export default function Home() {
             <h1 className="mt-1 text-4xl font-semibold text-white">无限画布</h1>
             <p className="mt-2 text-sm text-zinc-500">当前配置：{activeProfile.name} · {activeProfile.model || '未选模型'}</p>
           </div>
-          <button type="button" onClick={openSettings} className="rounded-xl border border-zinc-700 bg-zinc-900/70 px-5 py-3 text-sm font-medium text-zinc-100 transition hover:border-cyan-400 hover:text-cyan-200">
-            连接设置
-          </button>
+          <div className="flex items-center gap-3">
+            <Link href="/video" className="rounded-xl border border-zinc-700 bg-zinc-900/70 px-5 py-3 text-sm font-medium text-zinc-100 transition hover:border-cyan-400 hover:text-cyan-200">
+              视频生成
+            </Link>
+            <button type="button" onClick={openSettings} className="rounded-xl border border-zinc-700 bg-zinc-900/70 px-5 py-3 text-sm font-medium text-zinc-100 transition hover:border-cyan-400 hover:text-cyan-200">
+              连接设置
+            </button>
+          </div>
         </header>
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">

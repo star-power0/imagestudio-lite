@@ -5,10 +5,12 @@
 ## 功能
 
 - **文生图 / 图生图**：上传参考图即自动切换到编辑模式
+- **Grok Imagine 图片**：模型名以 `grok-imagine` 开头时自动切换到 xAI 原生协议（`aspect_ratio` + `resolution`），无需额外配置
+- **Grok Imagine 视频**：独立的「视频生成」页面，文生视频 / 图生视频，异步任务轮询进度
 - **并行生成**：最多同时开 3 个独立卡片，各自设置不同提示词、分辨率、画幅、质量、格式，并行发起请求
 - **多套连接配置**：可保存多个 API Key / Base URL / 模型组合，随时切换
 - **本地历史画廊**：最近 20 张生成结果自动保存在浏览器本地（IndexedDB），支持查看参数、单张下载、删除
-- **隐私优先**：API Key 只保存在你自己的浏览器里，图片和历史记录也只存在本地，不经过任何第三方服务器落盘
+- **隐私优先**：API Key 只保存在你自己的浏览器里，图片和历史记录也只存在本地，不经过任何第三方服务器落盘。视频生成例外：结果是服务商返回的临时链接，不落盘转存，请及时下载
 
 ## 快速开始（本地开发）
 
@@ -21,7 +23,7 @@ npm run dev
 
 ## 一键部署到 Vercel
 
-本项目的两个接口（`/api/generate`、`/api/models`）是标准的 Next.js Serverless Function，Vercel 原生支持，**部署不需要配置任何环境变量**——API Key 由使用者在页面里自行填写。
+本项目的接口（`/api/generate`、`/api/models`、`/api/videos/generate`、`/api/videos/status`）都是标准的 Next.js Serverless Function，Vercel 原生支持，**部署不需要配置任何环境变量**——API Key 由使用者在页面里自行填写。
 
 1. Fork 本仓库到你自己的 GitHub 账号下（或直接使用本仓库）
 2. 点击下面的按钮，选择仓库完成部署：

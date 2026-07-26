@@ -1,4 +1,4 @@
-import type { Ratio, Resolution, Settings } from './types';
+import type { Ratio, Resolution, Settings, VideoRatio, VideoResolution } from './types';
 
 export const DEFAULT_SETTINGS: Settings = { apiBaseUrl: 'https://api.openai.com/v1', apiKey: '', model: 'gpt-image-2' };
 
@@ -12,3 +12,9 @@ export const SIZES: Record<Resolution, Record<Ratio, string>> = {
 
 export const MAX_SLOTS = 3;
 export const MAX_HISTORY = 20;
+
+export const VIDEO_RATIOS: VideoRatio[] = ['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3'];
+export const VIDEO_RESOLUTIONS: VideoResolution[] = ['480p', '720p', '1080p'];
+export const VIDEO_MODEL = 'grok-imagine-video';
+export const MAX_VIDEO_DURATION = 15;
+export const DEFAULT_VIDEO_DURATION = 6;

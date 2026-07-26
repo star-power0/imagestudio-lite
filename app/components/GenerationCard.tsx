@@ -80,6 +80,8 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
       formData.append('model', settings.model);
       formData.append('prompt', prompt);
       formData.append('size', size);
+      formData.append('ratio', ratio);
+      formData.append('resolution', resolution);
       formData.append('quality', quality);
       formData.append('outputFormat', format);
       if (sourceImage) formData.append('image', sourceImage);

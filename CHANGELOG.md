@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added Grok Imagine support: `/api/generate` now detects `grok-imagine*` models and switches to xAI's native image protocol (`aspect_ratio` + `resolution`, JSON body, data-URL inline image for edits) while the existing gpt-image-2 path is untouched.
+- Added a standalone `/video` page and `VideoGenerationCard` component for Grok Imagine Video (text-to-video / image-to-video), backed by new `/api/videos/generate` (submits the async job) and `/api/videos/status` (polls xAI's `GET /v1/videos/{request_id}`) routes. Video results are streamed as a provider URL only, not re-encoded to base64 or persisted server-side, since Vercel serverless responses cap at ~4.5MB.
+- Verified against the user's third-party relay (`api2.wahuiliyi.cn`): the relay exposes `grok-imagine-image/-video` in `/v1/models` but currently rejects them with "该模型未定价，暂不可用" on images, and returns "unknown endpoint" for `/v1/videos/generations` — the relay's `GROK - SUPER` group description overstates what's actually wired up server-side. Confirmed via curl that both new routes forward requests correctly and surface the relay's real error; this is a relay-side gap, not a client bug.
 - Renamed the repo to `imagestudio-lite`, added MIT license and favicon, published to GitHub at `star-power0/imagestudio-lite`, and deployed to Vercel (`imagestudio-lite-3wtabg7zn-star-power0s-projects.vercel.app`) with zero required env vars.
 - Fixed an SSR/CSR hydration mismatch: the connection store is now initialized with a fixed default on first render and synced from `localStorage` only inside a post-mount `useEffect`.
 - Redesigned the page background (`.studio-backdrop`) with a layered aurora gradient, dot texture, vignette, and SVG noise overlay; added `relative z-10` to the content wrapper to keep it above the new fixed noise layer.
