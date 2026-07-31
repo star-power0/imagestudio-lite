@@ -21,6 +21,13 @@ npm run dev
 
 打开 [http://localhost:3000](http://localhost:3000)，在页面右上角「连接设置」里填入你的 API Base URL 和 API Key 即可使用。
 
+## 当前在线地址
+
+- [https://img.starroute.me/](https://img.starroute.me/)（自定义子域名，推荐）
+- [https://imagestudio-lite.vercel.app/](https://imagestudio-lite.vercel.app/)（Vercel 备用地址）
+
+`starroute.me` 根域名和 `api.starroute.me` 不属于本项目：前者未绑定到 ImageStudio，后者继续用于原有 API 中转服务。
+
 ## 一键部署到 Vercel
 
 本项目的接口（`/api/generate`、`/api/models`、`/api/videos/generate`、`/api/videos/status`）都是标准的 Next.js Serverless Function，Vercel 原生支持，**部署不需要配置任何环境变量**——API Key 由使用者在页面里自行填写。
