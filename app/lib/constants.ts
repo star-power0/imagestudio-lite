@@ -12,6 +12,7 @@ export const SIZES: Record<Resolution, Record<Ratio, string>> = {
 
 export const MAX_SLOTS = 3;
 export const MAX_HISTORY = 20;
+export const MAX_VIDEO_HISTORY = 10;
 
 export const VIDEO_RATIOS: VideoRatio[] = ['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3'];
 export const VIDEO_RESOLUTIONS: VideoResolution[] = ['480p', '720p', '1080p'];

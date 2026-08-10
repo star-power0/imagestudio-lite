@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added video generation history: each completed or failed job is saved in browser IndexedDB with prompt, duration, aspect ratio, resolution, timestamp, status, and the video blob when successful. A new 「视频历史」panel on the `/video` page lists past jobs, re-plays and downloads stored videos, and supports per-item delete and clear. History is capped at 10 entries. Fixed a shared IndexedDB upgrade bug: each history module's `onupgradeneeded` only created its own store, so whichever opened the DB first silently left the other store missing; both image and video history modules now ensure both stores exist at schema version 4.
+
 - Fixed Grok Imagine Video playback and download through authenticated relays: the app now proxies provider video content through `/api/videos/content`, creates a browser-local media URL for playback, and provides an explicit download button. The proxy only accepts video URLs from the configured API origin, forwards the API Key server-side, and does not persist the video.
 
 - Added Grok Imagine support: `/api/generate` now detects `grok-imagine*` models and switches to xAI's native image protocol (`aspect_ratio` + `resolution`, JSON body, data-URL inline image for edits) while the existing gpt-image-2 path is untouched.

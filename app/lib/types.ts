@@ -43,3 +43,16 @@ export type VideoTask = {
   url: string | null;
   errorMessage: string | null;
 };
+
+export type VideoHistoryEntry = {
+  id?: number;
+  prompt: string;
+  duration: number;
+  ratio: VideoRatio;
+  resolution: VideoResolution;
+  requestId: string;
+  status: 'done' | 'failed';
+  errorMessage: string | null;
+  blob: Blob | null;
+  createdAt: number;
+};

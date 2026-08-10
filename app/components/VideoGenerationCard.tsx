@@ -2,9 +2,10 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { DEFAULT_VIDEO_DURATION, MAX_VIDEO_DURATION, VIDEO_MODEL, VIDEO_RATIOS, VIDEO_RESOLUTIONS } from '../lib/constants';
+import { addVideoHistoryEntry } from '../lib/videoHistory';
 import type { Settings, VideoRatio, VideoResolution, VideoTask } from '../lib/types';
 
-type Props = { settings: Settings };
+type Props = { settings: Settings; onRecorded: () => void };
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -17,7 +18,7 @@ function fileToDataUrl(file: File) {
   });
 }
 
-export default function VideoGenerationCard({ settings }: Props) {
+export default function VideoGenerationCard({ settings, onRecorded }: Props) {
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState(DEFAULT_VIDEO_DURATION);
   const [ratio, setRatio] = useState<VideoRatio>('16:9');
@@ -64,7 +65,7 @@ export default function VideoGenerationCard({ settings }: Props) {
     pollTimer.current = null;
   };
 
-  const loadVideo = async (videoUrl: string) => {
+  const loadVideo = async (videoUrl: string): Promise<{ url: string; blob: Blob }> => {
     const response = await fetch('/api/videos/content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -74,9 +75,10 @@ export default function VideoGenerationCard({ settings }: Props) {
     if (!response.ok) throw new Error(data.error || '下载视频失败。');
 
     clearVideoObjectUrl();
-    const objectUrl = URL.createObjectURL(await response.blob());
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
     videoObjectUrl.current = objectUrl;
-    return objectUrl;
+    return { url: objectUrl, blob };
   };
 
   const downloadVideo = () => {
@@ -99,12 +101,24 @@ export default function VideoGenerationCard({ settings }: Props) {
 
         if (data.status === 'done') {
           if (!data.url) throw new Error('服务商未返回视频地址。');
-          const url = await loadVideo(data.url);
+          const { url, blob } = await loadVideo(data.url);
           setTask({ requestId, status: 'done', progress: 100, url, errorMessage: null });
+          try {
+            await addVideoHistoryEntry({ prompt, duration, ratio, resolution, requestId, status: 'done', errorMessage: null, blob, createdAt: Date.now() });
+          } catch {
+            // 历史保存失败不阻断播放
+          }
+          onRecorded();
           return;
         }
         if (data.status === 'failed') {
           setTask({ requestId, status: 'failed', progress: null, url: null, errorMessage: data.errorMessage || '视频生成失败。' });
+          try {
+            await addVideoHistoryEntry({ prompt, duration, ratio, resolution, requestId, status: 'failed', errorMessage: data.errorMessage || '视频生成失败。', blob: null, createdAt: Date.now() });
+          } catch {
+            // 历史保存失败不阻断错误展示
+          }
+          onRecorded();
           return;
         }
         setTask({ requestId, status: 'pending', progress: data.progress, url: null, errorMessage: null });

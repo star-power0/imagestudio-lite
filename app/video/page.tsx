@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import VideoGenerationCard from '../components/VideoGenerationCard';
+import VideoHistoryGallery from '../components/VideoHistoryGallery';
 import { getActiveProfile, loadConnectionStore, toSettings } from '../lib/connectionStore';
-import type { Settings } from '../lib/types';
+import { clearVideoHistory, listVideoHistory } from '../lib/videoHistory';
+import type { Settings, VideoHistoryEntry } from '../lib/types';
 
 export default function VideoPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [videoHistory, setVideoHistory] = useState<VideoHistoryEntry[]>([]);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect --
@@ -16,6 +19,23 @@ export default function VideoPage() {
     setSettings(toSettings(getActiveProfile(stored)));
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
+
+  useEffect(() => {
+    listVideoHistory().then(setVideoHistory).catch(() => undefined);
+  }, []);
+
+  const handleRecorded = async () => {
+    setVideoHistory(await listVideoHistory());
+  };
+
+  const handleDeleteVideoHistory = (id: number) => {
+    setVideoHistory((current) => current.filter((item) => item.id !== id));
+  };
+
+  const handleClearVideoHistory = async () => {
+    await clearVideoHistory();
+    setVideoHistory([]);
+  };
 
   return (
     <main className="studio-backdrop min-h-screen px-5 py-8 text-zinc-100 sm:px-8 lg:px-12">
@@ -32,10 +52,12 @@ export default function VideoPage() {
         </header>
 
         {settings ? (
-          <VideoGenerationCard settings={settings} />
+          <VideoGenerationCard settings={settings} onRecorded={handleRecorded} />
         ) : (
           <p className="text-sm text-zinc-500">加载连接设置中...</p>
         )}
+
+        <VideoHistoryGallery entries={videoHistory} onDelete={handleDeleteVideoHistory} onClear={handleClearVideoHistory} />
       </div>
     </main>
   );
