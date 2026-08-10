@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { DEFAULT_VIDEO_DURATION, MAX_VIDEO_DURATION, VIDEO_MODEL, VIDEO_RATIOS, VIDEO_RESOLUTIONS } from '../lib/constants';
 import type { Settings, VideoRatio, VideoResolution, VideoTask } from '../lib/types';
 
@@ -29,6 +29,17 @@ export default function VideoGenerationCard({ settings }: Props) {
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoObjectUrl = useRef<string | null>(null);
+
+  const clearVideoObjectUrl = () => {
+    if (videoObjectUrl.current) URL.revokeObjectURL(videoObjectUrl.current);
+    videoObjectUrl.current = null;
+  };
+
+  useEffect(() => () => {
+    if (pollTimer.current) clearTimeout(pollTimer.current);
+    if (videoObjectUrl.current) URL.revokeObjectURL(videoObjectUrl.current);
+  }, []);
 
   const chooseSourceImage = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -53,6 +64,31 @@ export default function VideoGenerationCard({ settings }: Props) {
     pollTimer.current = null;
   };
 
+  const loadVideo = async (videoUrl: string) => {
+    const response = await fetch('/api/videos/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiBaseUrl: settings.apiBaseUrl, apiKey: settings.apiKey, videoUrl }),
+    });
+    const data = response.ok ? null : await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || '下载视频失败。');
+
+    clearVideoObjectUrl();
+    const objectUrl = URL.createObjectURL(await response.blob());
+    videoObjectUrl.current = objectUrl;
+    return objectUrl;
+  };
+
+  const downloadVideo = () => {
+    if (!task?.url) return;
+    const link = document.createElement('a');
+    link.href = task.url;
+    link.download = `grok-imagine-video-${task.requestId}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   const pollStatus = (requestId: string) => {
     const tick = async () => {
       try {
@@ -62,7 +98,9 @@ export default function VideoGenerationCard({ settings }: Props) {
         if (!response.ok) throw new Error(data.error || '查询视频状态失败。');
 
         if (data.status === 'done') {
-          setTask({ requestId, status: 'done', progress: 100, url: data.url, errorMessage: null });
+          if (!data.url) throw new Error('服务商未返回视频地址。');
+          const url = await loadVideo(data.url);
+          setTask({ requestId, status: 'done', progress: 100, url, errorMessage: null });
           return;
         }
         if (data.status === 'failed') {
@@ -95,6 +133,7 @@ export default function VideoGenerationCard({ settings }: Props) {
     }
 
     stopPolling();
+    clearVideoObjectUrl();
     setSubmitting(true);
     setError('');
     setTask(null);
@@ -203,7 +242,10 @@ export default function VideoGenerationCard({ settings }: Props) {
         {task?.status === 'done' && task.url && (
           <div className="w-full">
             <video src={task.url} controls className="max-h-[360px] w-full rounded-lg" />
-            <p className="mt-3 text-xs text-zinc-500">视频链接来自服务商，有效期有限，请及时下载保存。</p>
+            <button type="button" onClick={downloadVideo} className="mt-3 w-full rounded-lg border border-cyan-400/70 px-4 py-2.5 text-sm font-medium text-cyan-200 transition hover:bg-cyan-400/10">
+              下载视频
+            </button>
+            <p className="mt-3 text-xs text-zinc-500">视频仅在当前浏览器会话中保留，请及时下载保存。</p>
           </div>
         )}
         {!task && <p className="text-sm text-zinc-500">等待生成</p>}
