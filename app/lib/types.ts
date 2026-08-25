@@ -9,6 +9,27 @@ export type ConnectionStore = { profiles: Profile[]; activeId: string };
 
 export type GeneratedImage = { dataUrl: string; width: number; height: number; format: ImageFormat };
 
+/** NovelAI 专属参数。走 /images/generations 时整体放进请求体的 `nai` 扩展对象。 */
+export type NaiParams = {
+  size: string;
+  steps: number;
+  scale: number;
+  sampler: string;
+  noiseSchedule: string;
+  ucPreset: number;
+  qualityToggle: boolean;
+};
+
+/** 一次生成的参数快照。NAI 与 OpenAI/Grok 两条路径各只填自己那部分。 */
+export type GenerationMeta = {
+  prompt: string;
+  negativePrompt?: string;
+  resolution?: Resolution;
+  ratio?: Ratio;
+  quality?: Quality;
+  nai?: NaiParams;
+};
+
 export type GenerationSlot = {
   id: string;
   prompt: string;
@@ -23,12 +44,8 @@ export type GenerationSlot = {
   error: string;
 };
 
-export type HistoryEntry = GeneratedImage & {
+export type HistoryEntry = GeneratedImage & GenerationMeta & {
   id?: number;
-  prompt: string;
-  resolution: Resolution;
-  ratio: Ratio;
-  quality: Quality;
   createdAt: number;
 };
 

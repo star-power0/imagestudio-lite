@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { readUpstreamError } from '../../../lib/apiError';
 
 function endpoint(baseUrl: string, path: string) {
   return `${baseUrl.replace(/\/+$/, '')}${path}`;
-}
-
-async function readError(response: Response) {
-  const payload = await response.json().catch(() => ({}));
-  return payload.error?.message || payload.message || `请求失败（HTTP ${response.status}）。`;
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ error: await readError(response) }, { status: response.status });
+      return NextResponse.json({ error: await readUpstreamError(response) }, { status: response.status });
     }
 
     const data = await response.json();

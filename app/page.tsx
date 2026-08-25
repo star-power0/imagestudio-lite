@@ -15,7 +15,7 @@ import {
 } from './lib/connectionStore';
 import { MAX_SLOTS } from './lib/constants';
 import { addHistoryEntry, clearHistory, listHistory } from './lib/imageHistory';
-import type { ConnectionStore, GeneratedImage, HistoryEntry, Quality, Ratio, Resolution, Settings } from './lib/types';
+import type { ConnectionStore, GeneratedImage, GenerationMeta, HistoryEntry, Settings } from './lib/types';
 
 function createSlotId() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -179,8 +179,8 @@ export default function Home() {
     setSlotIds((current) => current.filter((slotId) => slotId !== id));
   };
 
-  const handleGenerated = async (image: GeneratedImage, prompt: string, resolution: Resolution, ratio: Ratio, quality: Quality) => {
-    const entry: Omit<HistoryEntry, 'id'> = { ...image, prompt, resolution, ratio, quality, createdAt: Date.now() };
+  const handleGenerated = async (image: GeneratedImage, meta: GenerationMeta) => {
+    const entry: Omit<HistoryEntry, 'id'> = { ...image, ...meta, createdAt: Date.now() };
     await addHistoryEntry(entry);
     setHistory(await listHistory());
   };

@@ -61,11 +61,36 @@ export default function HistoryGallery({ entries, onDelete, onClear }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5" onClick={() => setActive(null)}>
           <div className="glass-panel max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl p-6" onClick={(event) => event.stopPropagation()}>
             <img src={active.dataUrl} alt={active.prompt} className="max-h-[60vh] w-full rounded-xl object-contain" />
-            <div className="mt-4 space-y-2 text-sm text-zinc-300">
+            <div className="mt-4 space-y-3 text-sm text-zinc-300">
               <p className="leading-6">{active.prompt}</p>
+              {active.negativePrompt && (
+                <p className="rounded-lg border-l-2 border-rose-400/60 bg-rose-400/5 px-3 py-2 text-xs leading-6 text-rose-200/90">
+                  <span className="mr-1.5 font-medium">负面</span>{active.negativePrompt}
+                </p>
+              )}
               <p className="text-xs text-zinc-500">
-                {active.width} x {active.height} · {active.resolution} · {active.ratio} · {new Date(active.createdAt).toLocaleString()}
+                {[
+                  `${active.width} x ${active.height}`,
+                  active.resolution,
+                  active.ratio,
+                  new Date(active.createdAt).toLocaleString(),
+                ].filter(Boolean).join(' · ')}
               </p>
+              {active.nai && (
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    ['采样器', active.nai.sampler],
+                    ['噪声', active.nai.noiseSchedule],
+                    ['步数', active.nai.steps],
+                    ['Scale', active.nai.scale],
+                    ['UC', active.nai.ucPreset],
+                  ].map(([label, value]) => (
+                    <span key={label} className="rounded-md border border-violet-400/30 bg-violet-400/10 px-2 py-0.5 text-[11px] text-violet-200">
+                      {label} {value}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-3">
               <button type="button" onClick={() => removeEntry(active.id)} className="rounded-lg border border-red-400/60 px-4 py-2 text-sm text-red-300 transition hover:bg-red-400/10">

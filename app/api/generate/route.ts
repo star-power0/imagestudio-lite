@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { readUpstreamError } from '../../lib/apiError';
 
 function endpoint(baseUrl: string, path: string) {
   return `${baseUrl.replace(/\/+$/, '')}${path}`;
-}
-
-async function readError(response: Response) {
-  const payload = await response.json().catch(() => ({}));
-  return payload.error?.message || payload.message || `请求失败（HTTP ${response.status}）。`;
 }
 
 function toDataUrl(bytes: ArrayBuffer, mimeType: string) {
@@ -19,6 +15,32 @@ async function fileToDataUrl(file: File) {
 
 function isGrokModel(model: string) {
   return model.startsWith('grok-imagine');
+}
+
+function isNaiModel(model: string) {
+  return model.startsWith('nai-diffusion');
+}
+
+/**
+ * NovelAI 走的是 OpenAI Images 的外壳，但所有 NovelAI 自有参数必须放进
+ * `nai` 扩展对象里，顶层只保留 model / prompt / size / n / response_format。
+ * 站点始终返回 PNG，所以这里不传 quality 和 output_format。
+ */
+function buildNaiBody(model: string, prompt: string, size: string, form: FormData) {
+  const negativePrompt = String(form.get('negativePrompt') || '').trim();
+
+  // seed 不在这里传：中转站的兼容层和原生层都会丢弃它，同一 seed 出图仍然不同。
+  const nai: Record<string, unknown> = {
+    steps: Number(form.get('naiSteps')) || 28,
+    scale: Number(form.get('naiScale')) || 5,
+    sampler: String(form.get('naiSampler') || 'k_euler_ancestral'),
+    noise_schedule: String(form.get('naiNoiseSchedule') || 'karras'),
+    ucPreset: Number(form.get('naiUcPreset') ?? 3),
+    qualityToggle: form.get('naiQualityToggle') === 'true',
+  };
+  if (negativePrompt) nai.negative_prompt = negativePrompt;
+
+  return { model, prompt, size, n: 1, response_format: 'b64_json', nai };
 }
 
 // Grok Imagine 2K 是当前上限，请求方带来的 4K 分辨率降级到 2K。
@@ -66,6 +88,12 @@ export async function POST(request: NextRequest) {
       };
       if (hasImage) body.image = { url: await fileToDataUrl(image as File) };
       response = await callGrok(apiBaseUrl, apiKey, body, hasImage);
+    } else if (isNaiModel(model)) {
+      response = await fetch(endpoint(apiBaseUrl, '/images/generations'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildNaiBody(model, prompt, size, formData)),
+      });
     } else {
       const headers = { Authorization: `Bearer ${apiKey}` };
       if (hasImage) {
@@ -94,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!response.ok) {
-      return NextResponse.json({ error: await readError(response) }, { status: response.status });
+      return NextResponse.json({ error: await readUpstreamError(response) }, { status: response.status });
     }
 
     const payload = await response.json();
