@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
     const ratio = String(formData.get('ratio') || '');
     const resolution = String(formData.get('resolution') || '');
     const quality = String(formData.get('quality') || 'auto');
+    // moderation 只对 OpenAI GPT Image 系列有意义；grok/nai 分支不读这个字段。
+    const moderation = String(formData.get('moderation') || 'low') === 'auto' ? 'auto' : 'low';
     const outputFormat = String(formData.get('outputFormat') || 'png');
     const image = formData.get('image');
     const hasImage = image instanceof File && image.size > 0;
@@ -103,6 +105,7 @@ export async function POST(request: NextRequest) {
         body.append('image', image as File, (image as File).name);
         body.append('size', size);
         body.append('quality', quality);
+        body.append('moderation', moderation);
         body.append('output_format', outputFormat);
         response = await fetch(endpoint(apiBaseUrl, '/images/edits'), { method: 'POST', headers, body });
       } else {
@@ -114,6 +117,7 @@ export async function POST(request: NextRequest) {
             prompt,
             size,
             quality,
+            moderation,
             output_format: outputFormat,
             response_format: 'b64_json',
           }),

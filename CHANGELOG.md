@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- 2026-09-04: Added a moderation control for the OpenAI-compatible image path, defaulting to `low` (borrowed from CookSleep/gpt_image_playground). `/api/generate` now forwards `moderation` on both `/images/generations` (JSON body) and `/images/edits` (multipart form field) for non-Grok/non-NAI models, normalized to `auto`/`low` (`low` fallback) before it reaches the upstream; the value only takes effect on real GPT Image models served by the relay. The generation card gains a 「审核」 dropdown (宽松/标准) next to 质量/格式 — hidden on `grok-imagine*` models (xAI protocol has no such parameter) and not rendered on the NAI panel (NAI path never reads it). The chosen value is stored in the generation history meta. Verified with a full `next build`; no live key round-trip was performed.
+
+## Unreleased (previous)
+
 - Added NovelAI (NAI Diffusion) support alongside the existing gpt-image-2 and Grok Imagine paths. `/api/generate` now detects `nai-diffusion*` models and posts the OpenAI Images shape with all NovelAI-specific settings nested in the relay's `nai` extension object (`steps`, `scale`, `sampler`, `noise_schedule`, `ucPreset`, `qualityToggle`, `negative_prompt`); the other two model paths are untouched. Because NovelAI only returns PNG and only accepts a fixed set of canvas sizes, NAI models get their own parameter panel (`NaiParamsPanel`) with six size presets instead of the resolution × aspect-ratio grid, and the quality/format selectors and reference-image uploader are hidden (NAI img2img requires the relay's low-level native endpoint, which this path does not use).
 - Added a negative-prompt field to the generation card for all model types, collapsed behind a "+ 添加负面提示词" toggle. Undesired Content is the main quality lever on NovelAI, so it is stored per generation and shown in the history detail view.
 - Verified end-to-end against the user's relay (`nai.rinko.ai`) with a real `ynai-` token: `nai-diffusion-4-5-full` at 832×1216 / 28 steps returns a valid 832×1216 PNG through both the upstream endpoint and `/api/generate`, billed at 0 Gems.

@@ -1,5 +1,7 @@
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 export type Quality = 'auto' | 'low' | 'medium' | 'high';
+/** OpenAI GPT Image 系列专属的服务端内容审核档位，auto 为官方默认，low 更宽松（红线类内容仍会被拦）。 */
+export type Moderation = 'auto' | 'low';
 export type Resolution = '1K' | '2K' | '4K';
 export type Ratio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '3:2' | '2:3';
 
@@ -27,6 +29,7 @@ export type GenerationMeta = {
   resolution?: Resolution;
   ratio?: Ratio;
   quality?: Quality;
+  moderation?: Moderation;
   nai?: NaiParams;
 };
 
@@ -36,6 +39,7 @@ export type GenerationSlot = {
   resolution: Resolution;
   ratio: Ratio;
   quality: Quality;
+  moderation: Moderation;
   format: ImageFormat;
   sourceImage: File | null;
   sourcePreview: string | null;

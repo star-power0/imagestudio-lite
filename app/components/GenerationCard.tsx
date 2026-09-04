@@ -3,7 +3,7 @@
 import { ChangeEvent, forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { isNaiModel, NAI_DEFAULT_PARAMS, NAI_FREE_MAX_STEPS, NAI_SIZE_PRESETS, RATIOS, SIZES } from '../lib/constants';
 import NaiParamsPanel from './NaiParamsPanel';
-import type { GeneratedImage, GenerationMeta, ImageFormat, NaiParams, Quality, Ratio, Resolution, Settings } from '../lib/types';
+import type { GeneratedImage, GenerationMeta, ImageFormat, Moderation, NaiParams, Quality, Ratio, Resolution, Settings } from '../lib/types';
 
 export type GenerationCardHandle = {
   generate: () => void;
@@ -37,6 +37,8 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
   const [resolution, setResolution] = useState<Resolution>('1K');
   const [ratio, setRatio] = useState<Ratio>('1:1');
   const [quality, setQuality] = useState<Quality>('auto');
+  // OpenAI GPT Image 的服务端审核档位：low 放宽过滤，硬红线内容仍会被上游拦截。
+  const [moderation, setModeration] = useState<Moderation>('low');
   const [format, setFormat] = useState<ImageFormat>('png');
   const [naiParams, setNaiParams] = useState<NaiParams>(NAI_DEFAULT_PARAMS);
   const [sourceImage, setSourceImage] = useState<File | null>(null);
@@ -48,6 +50,8 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
 
   // NovelAI 只出 PNG，且尺寸来自它自己的预设表，不走 分辨率 x 画幅 的组合。
   const isNai = isNaiModel(settings.model);
+  // Grok 走 xAI 原生协议，没有 moderation 参数，UI 上隐藏该下拉。
+  const isGrok = !isNai && settings.model.startsWith('grok-imagine');
   const size = isNai ? naiParams.size : SIZES[resolution][ratio];
   const outputFormat: ImageFormat = isNai ? 'png' : format;
   const isNaiFree = naiParams.steps <= NAI_FREE_MAX_STEPS
@@ -101,6 +105,7 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
       formData.append('ratio', ratio);
       formData.append('resolution', resolution);
       formData.append('quality', quality);
+      formData.append('moderation', moderation);
       formData.append('outputFormat', outputFormat);
       if (negativePrompt.trim()) formData.append('negativePrompt', negativePrompt.trim());
       if (isNai) {
@@ -123,7 +128,7 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
       onGenerated(generated, {
         prompt,
         negativePrompt: negativePrompt.trim() || undefined,
-        ...(isNai ? { nai: naiParams } : { resolution, ratio, quality }),
+        ...(isNai ? { nai: naiParams } : { resolution, ratio, quality, moderation }),
       });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '图片生成失败。');
@@ -245,7 +250,7 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
 
           <p className="text-xs text-zinc-500">请求尺寸：{size}</p>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={isGrok ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-3 gap-3'}>
             <label className="text-sm text-zinc-300">
               质量
               <select value={quality} onChange={(event) => setQuality(event.target.value as Quality)} className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900/70 p-2.5 text-sm text-white outline-none focus:border-cyan-400">
@@ -255,6 +260,15 @@ const GenerationCard = forwardRef<GenerationCardHandle, Props>(function Generati
                 <option value="high">高</option>
               </select>
             </label>
+            {!isGrok && (
+              <label className="text-sm text-zinc-300">
+                审核
+                <select value={moderation} onChange={(event) => setModeration(event.target.value as Moderation)} className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900/70 p-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                  <option value="low">宽松</option>
+                  <option value="auto">标准</option>
+                </select>
+              </label>
+            )}
             <label className="text-sm text-zinc-300">
               格式
               <select value={format} onChange={(event) => setFormat(event.target.value as ImageFormat)} className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900/70 p-2.5 text-sm text-white outline-none focus:border-cyan-400">
